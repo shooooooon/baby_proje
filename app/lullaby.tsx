@@ -10,7 +10,7 @@ import { trpc } from "@/lib/trpc";
 
 export default function LullabyScreen() {
   const router = useRouter();
-  const { parent, language } = useApp();
+  const { parent, language, babyName } = useApp();
   const t = useTranslation();
   const [lullaby, setLullaby] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -42,7 +42,7 @@ export default function LullabyScreen() {
     }
     setIsLoading(true);
 
-    const prompt = buildLullabyPrompt(parent as Parent, language as Language);
+    const prompt = buildLullabyPrompt(parent as Parent, language as Language, babyName);
 
     try {
       const response = await aiMutation.mutateAsync({
@@ -137,13 +137,22 @@ export default function LullabyScreen() {
   );
 }
 
-function buildLullabyPrompt(parent: Parent, language: Language): string {
+function buildLullabyPrompt(parent: Parent, language: Language, babyName?: string | null): string {
   const parentName = parent === "papa" 
     ? (language === "ja" ? "パパ" : "Papa") 
     : (language === "ja" ? "ママ" : "Mama");
 
+  // 名前の使用頻度を自然にするための指示
+  const nameInstruction = babyName
+    ? (language === "ja" 
+        ? `赤ちゃんの名前は「${babyName}」です。子守唄の中で名前を一度だけ優しく呼んであげてください。`
+        : `The baby's name is "${babyName}". Gently include their name once in the lullaby.`)
+    : "";
+
   if (language === "ja") {
     return `あなたは${parentName}です。赤ちゃんに優しい子守唄を歌ってあげてください。
+
+${nameInstruction}
 
 以下のフォーマットで回答してください：
 1. まず*優しく抱っこして*のようなアクション描写
@@ -155,6 +164,8 @@ function buildLullabyPrompt(parent: Parent, language: Language): string {
   }
 
   return `You are ${parentName}. Please sing a gentle lullaby to the baby.
+
+${nameInstruction}
 
 Format your response as:
 1. First, an action description like *gently rocks you*

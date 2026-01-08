@@ -381,12 +381,22 @@ function buildPrompt(action: string, parent: Parent, language: Language, babyNam
     ? babyName 
     : (language === "ja" ? "赤ちゃん" : "little one");
 
-  return `You are ${parentName}, ${parentDesc}. You are caring for a baby named "${babyNameStr}" (the user).
+  // 名前の使用頻度を自然にするための指示
+  const nameInstruction = babyName
+    ? (language === "ja" 
+        ? `赤ちゃんの名前は「${babyNameStr}」です。名前を呼ぶのは最初の一回だけ、または特に愛情を込めたい時だけにしてください。毎回名前を呼ぶのは不自然なので、「赤ちゃん」「ぼく」「きみ」などの代名詞も使ってください。`
+        : `The baby's name is "${babyNameStr}". Only use their name once at the beginning or when expressing special affection. Using the name every time sounds unnatural, so also use pronouns like "you", "sweetie", "little one", etc.`)
+    : (language === "ja"
+        ? `赤ちゃんを「赤ちゃん」「ぼく」「きみ」などと呼んでください。`
+        : `Call the baby "sweetie", "little one", "you", etc.`);
+
+  return `You are ${parentName}, ${parentDesc}. You are caring for a baby (the user).
+
+${nameInstruction}
 
 The baby is ${action}.
 
 Respond in ${language === "ja" ? "Japanese" : "English"} with 30-80 words.
-Address the baby by their name "${babyNameStr}" occasionally.
 Include actions in italics like *gently rocks you* or *優しく抱き上げて*.
 Use soft, affectionate baby-talk.
 Be repetitive and rhythmic (babies find this comforting).

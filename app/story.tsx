@@ -10,7 +10,7 @@ import { trpc } from "@/lib/trpc";
 
 export default function StoryScreen() {
   const router = useRouter();
-  const { parent, language } = useApp();
+  const { parent, language, babyName } = useApp();
   const t = useTranslation();
   const [story, setStory] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -42,7 +42,7 @@ export default function StoryScreen() {
     }
     setIsLoading(true);
 
-    const prompt = buildStoryPrompt(parent as Parent, language as Language);
+    const prompt = buildStoryPrompt(parent as Parent, language as Language, babyName);
 
     try {
       const response = await aiMutation.mutateAsync({
@@ -137,13 +137,22 @@ export default function StoryScreen() {
   );
 }
 
-function buildStoryPrompt(parent: Parent, language: Language): string {
+function buildStoryPrompt(parent: Parent, language: Language, babyName?: string | null): string {
   const parentName = parent === "papa" 
     ? (language === "ja" ? "パパ" : "Papa") 
     : (language === "ja" ? "ママ" : "Mama");
 
+  // 名前の使用頻度を自然にするための指示
+  const nameInstruction = babyName
+    ? (language === "ja" 
+        ? `赤ちゃんの名前は「${babyName}」です。お話の最後に名前を呼んで「おやすみなさい」と言ってあげてください。`
+        : `The baby's name is "${babyName}". At the end, say goodnight using their name.`)
+    : "";
+
   if (language === "ja") {
     return `あなたは${parentName}です。赤ちゃんに短くて優しい絵本のお話を読み聞かせてあげてください。
+
+${nameInstruction}
 
 以下のフォーマットで回答してください：
 1. まず*絵本を開いて*のようなアクション描写
@@ -155,6 +164,8 @@ function buildStoryPrompt(parent: Parent, language: Language): string {
   }
 
   return `You are ${parentName}. Please read a short, gentle bedtime story to the baby.
+
+${nameInstruction}
 
 Format your response as:
 1. First, an action description like *opens the storybook*

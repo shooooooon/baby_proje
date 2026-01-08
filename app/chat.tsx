@@ -22,7 +22,7 @@ const STORAGE_KEY_DATE = "chat_date";
 
 export default function ChatScreen() {
   const router = useRouter();
-  const { parent, language } = useApp();
+  const { parent, language, babyName } = useApp();
   const { isPremium } = usePremium();
   const t = useTranslation();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -112,7 +112,7 @@ export default function ChatScreen() {
     }
 
     try {
-      const systemPrompt = buildSystemPrompt(parent as Parent, language as Language);
+      const systemPrompt = buildSystemPrompt(parent as Parent, language as Language, babyName);
       const conversationHistory = [
         { role: "system" as const, content: systemPrompt },
         ...messages.map(m => ({ role: m.role as "user" | "assistant", content: m.content })),
@@ -286,7 +286,7 @@ export default function ChatScreen() {
   );
 }
 
-function buildSystemPrompt(parent: Parent, language: Language): string {
+function buildSystemPrompt(parent: Parent, language: Language, babyName?: string | null): string {
   const parentName = parent === "papa" 
     ? (language === "ja" ? "パパ" : "Papa") 
     : (language === "ja" ? "ママ" : "Mama");
@@ -295,8 +295,19 @@ function buildSystemPrompt(parent: Parent, language: Language): string {
     ? (language === "ja" ? "優しく穏やかで、少し不器用だが一生懸命な父親" : "A gentle, playful, slightly clumsy but devoted father")
     : (language === "ja" ? "温かく包容力があり、直感的に赤ちゃんの気持ちを察する母親" : "A warm, intuitive, soothing mother");
 
+  // 名前の使用頻度を自然にするための指示
+  const nameInstruction = babyName
+    ? (language === "ja" 
+        ? `赤ちゃんの名前は「${babyName}」です。名前を呼ぶのは最初の一回だけ、または特に愛情を込めたい時だけにしてください。毎回名前を呼ぶのは不自然なので、「赤ちゃん」「ぼく」「きみ」などの代名詞も使ってください。`
+        : `The baby's name is "${babyName}". Only use their name once at the beginning or when expressing special affection. Using the name every time sounds unnatural, so also use pronouns like "you", "sweetie", "little one", etc.`)
+    : (language === "ja"
+        ? `赤ちゃんを「赤ちゃん」「ぼく」「きみ」などと呼んでください。`
+        : `Call the baby "sweetie", "little one", "you", etc.`);
+
   if (language === "ja") {
     return `あなたは${parentName}です。${parentDesc}として、赤ちゃん（ユーザー）と自由に会話してください。
+
+${nameInstruction}
 
 ルール：
 - 常に${parentName}として振る舞ってください
@@ -307,6 +318,8 @@ function buildSystemPrompt(parent: Parent, language: Language): string {
   }
 
   return `You are ${parentName}, ${parentDesc}. Have a free conversation with the baby (user).
+
+${nameInstruction}
 
 Rules:
 - Always stay in character as ${parentName}
