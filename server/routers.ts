@@ -1,10 +1,11 @@
+import { z } from "zod";
 import { COOKIE_NAME } from "../shared/const.js";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, router } from "./_core/trpc";
+import { invokeLLM, type Message } from "./_core/llm";
 
 export const appRouter = router({
-  // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
   system: systemRouter,
   auth: router({
     me: publicProcedure.query((opts) => opts.ctx.user),
@@ -17,12 +18,46 @@ export const appRouter = router({
     }),
   }),
 
-  // TODO: add feature routers here, e.g.
-  // todo: router({
-  //   list: protectedProcedure.query(({ ctx }) =>
-  //     db.getUserTodos(ctx.user.id)
-  //   ),
-  // }),
+  // AI Chat router for baby simulation
+  ai: router({
+    chat: publicProcedure
+      .input(
+        z.object({
+          messages: z.array(
+            z.object({
+              role: z.enum(["system", "user", "assistant"]),
+              content: z.string(),
+            })
+          ),
+        })
+      )
+      .mutation(async ({ input }) => {
+        try {
+          const result = await invokeLLM({
+            messages: input.messages as Message[],
+            maxTokens: 300,
+          });
+
+          const content = result.choices[0]?.message?.content;
+          const textContent = typeof content === "string" 
+            ? content 
+            : Array.isArray(content) 
+              ? content.find(c => c.type === "text")?.text || ""
+              : "";
+
+          return {
+            content: textContent,
+            success: true,
+          };
+        } catch (error) {
+          console.error("LLM invocation error:", error);
+          return {
+            content: "I'm here for you, little one. *gently holds you*",
+            success: false,
+          };
+        }
+      }),
+  }),
 });
 
 export type AppRouter = typeof appRouter;
