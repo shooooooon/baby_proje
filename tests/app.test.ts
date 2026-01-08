@@ -173,6 +173,149 @@ describe("Fallback Responses", () => {
   });
 });
 
+// 子守唄プロンプトのテスト
+describe("Lullaby Prompt Generation", () => {
+  function buildLullabyPrompt(parent: "papa" | "mama", language: "en" | "ja"): string {
+    const parentName = parent === "papa" 
+      ? (language === "ja" ? "パパ" : "Papa") 
+      : (language === "ja" ? "ママ" : "Mama");
+
+    if (language === "ja") {
+      return `あなたは${parentName}です。赤ちゃんに優しい子守唄を歌ってあげてください。`;
+    }
+    return `You are ${parentName}. Please sing a gentle lullaby to the baby.`;
+  }
+
+  it("should generate Japanese Papa lullaby prompt", () => {
+    const prompt = buildLullabyPrompt("papa", "ja");
+    expect(prompt).toContain("パパ");
+    expect(prompt).toContain("子守唄");
+  });
+
+  it("should generate English Mama lullaby prompt", () => {
+    const prompt = buildLullabyPrompt("mama", "en");
+    expect(prompt).toContain("Mama");
+    expect(prompt).toContain("lullaby");
+  });
+});
+
+// 絵本プロンプトのテスト
+describe("Story Prompt Generation", () => {
+  function buildStoryPrompt(parent: "papa" | "mama", language: "en" | "ja"): string {
+    const parentName = parent === "papa" 
+      ? (language === "ja" ? "パパ" : "Papa") 
+      : (language === "ja" ? "ママ" : "Mama");
+
+    if (language === "ja") {
+      return `あなたは${parentName}です。赤ちゃんに短くて優しい絵本のお話を読み聞かせてあげてください。`;
+    }
+    return `You are ${parentName}. Please read a short, gentle bedtime story to the baby.`;
+  }
+
+  it("should generate Japanese Mama story prompt", () => {
+    const prompt = buildStoryPrompt("mama", "ja");
+    expect(prompt).toContain("ママ");
+    expect(prompt).toContain("絵本");
+  });
+
+  it("should generate English Papa story prompt", () => {
+    const prompt = buildStoryPrompt("papa", "en");
+    expect(prompt).toContain("Papa");
+    expect(prompt).toContain("story");
+  });
+});
+
+// 子守唄フォールバックのテスト
+describe("Lullaby Fallback Responses", () => {
+  const lullabies = {
+    papa: {
+      en: "*gently rocks you in his arms*\n\nHush little baby, don't you cry,\nPapa's gonna sing you a lullaby.",
+      ja: "*優しく抱っこしてゆらゆら*\n\nねんねんころりよ おころりよ\nパパがそばにいるからね",
+    },
+    mama: {
+      en: "*holds you close to her heart*\n\nSleep, my baby, sleep so tight,\nMommy's love will hold you right.",
+      ja: "*胸に抱きしめて*\n\nねんねんころりよ おころりよ\nママのそばでおやすみなさい",
+    },
+  };
+
+  it("should have Papa English lullaby", () => {
+    expect(lullabies.papa.en).toContain("Papa");
+    expect(lullabies.papa.en).toContain("lullaby");
+  });
+
+  it("should have Mama Japanese lullaby", () => {
+    expect(lullabies.mama.ja).toContain("ママ");
+    expect(lullabies.mama.ja).toContain("ねんねんころりよ");
+  });
+});
+
+// 絵本フォールバックのテスト
+describe("Story Fallback Responses", () => {
+  const stories = {
+    papa: {
+      en: "*opens the storybook and settles you in his lap*\n\nOnce upon a time, there was a little bunny named Fluffy.",
+      ja: "*絵本を開いて膝の上に座らせて*\n\nむかしむかし、ふわふわという名前の小さなうさぎがいました。",
+    },
+    mama: {
+      en: "*cuddles you close and opens the picture book*\n\nIn a garden full of flowers, there lived a tiny butterfly.",
+      ja: "*ぎゅっと抱きしめて絵本を開いて*\n\nお花がいっぱいのお庭に、小さなちょうちょが住んでいました。",
+    },
+  };
+
+  it("should have Papa English story", () => {
+    expect(stories.papa.en).toContain("storybook");
+    expect(stories.papa.en).toContain("bunny");
+  });
+
+  it("should have Mama Japanese story", () => {
+    expect(stories.mama.ja).toContain("絵本");
+    expect(stories.mama.ja).toContain("ちょうちょ");
+  });
+});
+
+// 特別モード翻訳のテスト
+describe("Special Mode Translations", () => {
+  const translations = {
+    en: {
+      lullaby: "Lullaby",
+      lullabyDesc: "Listen to a soothing lullaby",
+      storyTime: "Story Time",
+      storyTimeDesc: "Listen to a bedtime story",
+      backToMain: "Back",
+      listenToLullaby: "Sing me a lullaby",
+      tellMeStory: "Tell me a story",
+      newLullaby: "Another lullaby",
+      newStory: "Another story",
+    },
+    ja: {
+      lullaby: "子守唄",
+      lullabyDesc: "優しい子守唄を聴く",
+      storyTime: "絵本",
+      storyTimeDesc: "おやすみのお話を聴く",
+      backToMain: "戻る",
+      listenToLullaby: "子守唄を歌って",
+      tellMeStory: "お話して",
+      newLullaby: "もう一曲",
+      newStory: "もう一つ",
+    },
+  };
+
+  it("should have English special mode translations", () => {
+    expect(translations.en.lullaby).toBe("Lullaby");
+    expect(translations.en.storyTime).toBe("Story Time");
+  });
+
+  it("should have Japanese special mode translations", () => {
+    expect(translations.ja.lullaby).toBe("子守唄");
+    expect(translations.ja.storyTime).toBe("絵本");
+  });
+
+  it("should have action button texts", () => {
+    expect(translations.en.listenToLullaby).toBe("Sing me a lullaby");
+    expect(translations.ja.listenToLullaby).toBe("子守唄を歌って");
+  });
+});
+
 // テーマカラーのテスト
 describe("Theme Colors", () => {
   const papaColors = {

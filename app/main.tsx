@@ -113,6 +113,22 @@ export default function MainScreen() {
     router.replace("/");
   };
 
+  const handleLullaby = () => {
+    if (Platform.OS !== "web") {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    setShowSettings(false);
+    router.push("/lullaby" as never);
+  };
+
+  const handleStory = () => {
+    if (Platform.OS !== "web") {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    setShowSettings(false);
+    router.push("/story" as never);
+  };
+
   useEffect(() => {
     // 新しいメッセージが追加されたらスクロール
     setTimeout(() => {
@@ -160,6 +176,28 @@ export default function MainScreen() {
             entering={FadeIn.duration(200)}
             style={[styles.settingsMenu, { backgroundColor: colors.surface }]}
           >
+            <Text style={styles.settingsHeader}>{t.specialModes}</Text>
+            <Pressable
+              onPress={handleLullaby}
+              style={({ pressed }) => [
+                styles.settingsItem,
+                pressed && styles.settingsItemPressed,
+              ]}
+            >
+              <Text style={styles.settingsItemEmoji}>🌙</Text>
+              <Text style={styles.settingsItemText}>{t.lullaby}</Text>
+            </Pressable>
+            <Pressable
+              onPress={handleStory}
+              style={({ pressed }) => [
+                styles.settingsItem,
+                pressed && styles.settingsItemPressed,
+              ]}
+            >
+              <Text style={styles.settingsItemEmoji}>📚</Text>
+              <Text style={styles.settingsItemText}>{t.storyTime}</Text>
+            </Pressable>
+            <View style={styles.settingsDivider} />
             <Pressable
               onPress={handleChangeParent}
               style={({ pressed }) => [
@@ -167,6 +205,7 @@ export default function MainScreen() {
                 pressed && styles.settingsItemPressed,
               ]}
             >
+              <Text style={styles.settingsItemEmoji}>🔄</Text>
               <Text style={styles.settingsItemText}>{t.changeParent}</Text>
             </Pressable>
           </Animated.View>
@@ -206,6 +245,32 @@ export default function MainScreen() {
             </View>
           )}
         </ScrollView>
+
+        {/* 特別モードボタン */}
+        <View style={[styles.specialModesBar, { backgroundColor: colors.surface, borderTopColor: colors.border }]}>
+          <Pressable
+            onPress={handleLullaby}
+            style={({ pressed }) => [
+              styles.specialModeButton,
+              { backgroundColor: colors.primary },
+              pressed && styles.specialModeButtonPressed,
+            ]}
+          >
+            <Text style={styles.specialModeEmoji}>🌙</Text>
+            <Text style={styles.specialModeText}>{t.lullaby}</Text>
+          </Pressable>
+          <Pressable
+            onPress={handleStory}
+            style={({ pressed }) => [
+              styles.specialModeButton,
+              { backgroundColor: colors.primary },
+              pressed && styles.specialModeButtonPressed,
+            ]}
+          >
+            <Text style={styles.specialModeEmoji}>📚</Text>
+            <Text style={styles.specialModeText}>{t.storyTime}</Text>
+          </Pressable>
+        </View>
 
         {/* アクションボタン */}
         <Animated.View 
@@ -379,26 +444,46 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: 60,
     right: 16,
-    borderRadius: 12,
-    padding: 8,
+    borderRadius: 16,
+    padding: 12,
     zIndex: 100,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.15,
     shadowRadius: 4,
     elevation: 5,
+    minWidth: 180,
+  },
+  settingsHeader: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#687076",
+    marginBottom: 8,
+    paddingHorizontal: 8,
   },
   settingsItem: {
+    flexDirection: "row",
+    alignItems: "center",
     paddingVertical: 12,
-    paddingHorizontal: 16,
+    paddingHorizontal: 8,
     borderRadius: 8,
   },
   settingsItemPressed: {
     opacity: 0.7,
+    backgroundColor: "rgba(0,0,0,0.05)",
+  },
+  settingsItemEmoji: {
+    fontSize: 20,
+    marginRight: 12,
   },
   settingsItemText: {
     fontSize: 16,
     color: "#11181C",
+  },
+  settingsDivider: {
+    height: 1,
+    backgroundColor: "rgba(0,0,0,0.1)",
+    marginVertical: 8,
   },
   messagesContainer: {
     flex: 1,
@@ -431,6 +516,39 @@ const styles = StyleSheet.create({
   },
   aiText: {
     color: "#11181C",
+  },
+  specialModesBar: {
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderTopWidth: 1,
+  },
+  specialModeButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  specialModeButtonPressed: {
+    transform: [{ scale: 0.97 }],
+    opacity: 0.9,
+  },
+  specialModeEmoji: {
+    fontSize: 18,
+    marginRight: 8,
+  },
+  specialModeText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#ffffff",
   },
   actionsContainer: {
     padding: 16,
