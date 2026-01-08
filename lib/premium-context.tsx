@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { STORAGE_KEYS } from '@/constants/storage-keys';
 
 // プレミアムプランの型定義
 export type PremiumPlan = 'free' | 'premium';
@@ -18,10 +19,7 @@ interface PremiumContextType extends PremiumState {
 
 const PremiumContext = createContext<PremiumContextType | undefined>(undefined);
 
-const STORAGE_KEYS = {
-  PREMIUM_PLAN: 'premium_plan',
-  PURCHASE_DATE: 'premium_purchase_date',
-};
+// STORAGE_KEYSは@/constants/storage-keysからインポート
 
 export function PremiumProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<PremiumState>({

@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { STORAGE_KEYS } from '@/constants/storage-keys';
 
 // 型定義
 export type Language = 'en' | 'ja';
@@ -21,11 +22,7 @@ interface AppContextType extends AppState {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
-const STORAGE_KEYS = {
-  LANGUAGE: 'app_language',
-  PARENT: 'app_parent',
-  BABY_NAME: 'app_baby_name',
-};
+// STORAGE_KEYSは@/constants/storage-keysからインポート
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AppState>({

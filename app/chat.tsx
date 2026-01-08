@@ -3,12 +3,14 @@ import { useRouter } from "expo-router";
 import { ScreenContainer } from "@/components/screen-container";
 import { useApp, useTranslation, type Language, type Parent } from "@/lib/app-context";
 import { usePremium } from "@/lib/premium-context";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import * as Haptics from "expo-haptics";
 import { Platform } from "react-native";
 import Animated, { FadeIn, FadeInUp } from "react-native-reanimated";
 import { trpc } from "@/lib/trpc";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { STORAGE_KEYS } from "@/constants/storage-keys";
+import { getParentColors } from "@/lib/theme-utils";
 
 interface ChatMessage {
   id: string;
@@ -17,8 +19,7 @@ interface ChatMessage {
 }
 
 const FREE_DAILY_LIMIT = 3;
-const STORAGE_KEY_MESSAGES = "chat_messages_today";
-const STORAGE_KEY_DATE = "chat_date";
+// STORAGE_KEYSは@/constants/storage-keysからインポート
 
 export default function ChatScreen() {
   const router = useRouter();
@@ -38,18 +39,24 @@ export default function ChatScreen() {
     loadMessageCount();
   }, []);
 
+  // タイムゾーン問題対策: より確実な日付比較
+  const getTodayKey = () => {
+    const now = new Date();
+    return `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`;
+  };
+
   const loadMessageCount = async () => {
     try {
-      const storedDate = await AsyncStorage.getItem(STORAGE_KEY_DATE);
-      const today = new Date().toDateString();
+      const storedDate = await AsyncStorage.getItem(STORAGE_KEYS.CHAT_DATE);
+      const today = getTodayKey();
       
       if (storedDate === today) {
-        const count = await AsyncStorage.getItem(STORAGE_KEY_MESSAGES);
+        const count = await AsyncStorage.getItem(STORAGE_KEYS.CHAT_MESSAGES);
         setMessagesUsedToday(parseInt(count || "0", 10));
       } else {
         // 新しい日なのでリセット
-        await AsyncStorage.setItem(STORAGE_KEY_DATE, today);
-        await AsyncStorage.setItem(STORAGE_KEY_MESSAGES, "0");
+        await AsyncStorage.setItem(STORAGE_KEYS.CHAT_DATE, today);
+        await AsyncStorage.setItem(STORAGE_KEYS.CHAT_MESSAGES, "0");
         setMessagesUsedToday(0);
       }
     } catch (error) {
@@ -60,31 +67,15 @@ export default function ChatScreen() {
   const incrementMessageCount = async () => {
     try {
       const newCount = messagesUsedToday + 1;
-      await AsyncStorage.setItem(STORAGE_KEY_MESSAGES, newCount.toString());
+      await AsyncStorage.setItem(STORAGE_KEYS.CHAT_MESSAGES, newCount.toString());
       setMessagesUsedToday(newCount);
     } catch (error) {
       console.error("Failed to save message count:", error);
     }
   };
 
-  const getParentColors = () => {
-    if (parent === "papa") {
-      return {
-        bg: "#E3F2FD",
-        primary: "#90CAF9",
-        surface: "#BBDEFB",
-        border: "#64B5F6",
-      };
-    }
-    return {
-      bg: "#FCE4EC",
-      primary: "#F48FB1",
-      surface: "#F8BBD9",
-      border: "#F06292",
-    };
-  };
-
-  const colors = getParentColors();
+  // パフォーマンス最適化: useMemoでメモ化
+  const colors = useMemo(() => getParentColors(parent), [parent]);
 
   const canSendMessage = isPremium || messagesUsedToday < FREE_DAILY_LIMIT;
   const remainingMessages = FREE_DAILY_LIMIT - messagesUsedToday;
@@ -106,13 +97,15 @@ export default function ChatScreen() {
     setInputText("");
     setIsLoading(true);
 
-    // 無料ユーザーの場合はカウントを増やす
-    if (!isPremium) {
-      await incrementMessageCount();
-    }
-
     try {
-      const systemPrompt = buildSystemPrompt(parent as Parent, language as Language, babyName);
+      // 型安全性チェック
+      if (!parent || !language) {
+        console.error("Parent or language is not set");
+        setIsLoading(false);
+        return;
+      }
+
+      const systemPrompt = buildSystemPrompt(parent, language, babyName);
       const conversationHistory = [
         { role: "system" as const, content: systemPrompt },
         ...messages.map(m => ({ role: m.role as "user" | "assistant", content: m.content })),
@@ -130,6 +123,11 @@ export default function ChatScreen() {
       };
 
       setMessages(prev => [...prev, assistantMessage]);
+
+      // API成功後にカウントを増やす（バグ修正）
+      if (!isPremium) {
+        await incrementMessageCount();
+      }
 
       if (Platform.OS !== "web") {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -156,9 +154,10 @@ export default function ChatScreen() {
   };
 
   useEffect(() => {
-    setTimeout(() => {
+    const timer = setTimeout(() => {
       scrollViewRef.current?.scrollToEnd({ animated: true });
     }, 100);
+    return () => clearTimeout(timer);
   }, [messages]);
 
   // 初期挨拶

@@ -72,6 +72,9 @@ export default function LanguageSelectScreen() {
           </Text>
           
           <Pressable
+            accessibilityLabel="English"
+            accessibilityHint="Select English as your language"
+            accessibilityRole="button"
             onPress={() => handleLanguageSelect("en")}
             style={({ pressed }) => [
               styles.button,
@@ -83,6 +86,9 @@ export default function LanguageSelectScreen() {
           </Pressable>
 
           <Pressable
+            accessibilityLabel="日本語"
+            accessibilityHint="日本語を選択します"
+            accessibilityRole="button"
             onPress={() => handleLanguageSelect("ja")}
             style={({ pressed }) => [
               styles.button,

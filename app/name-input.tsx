@@ -2,10 +2,11 @@ import { Text, View, Pressable, StyleSheet, TextInput, KeyboardAvoidingView, Pla
 import { useRouter } from "expo-router";
 import { ScreenContainer } from "@/components/screen-container";
 import { useApp, useTranslation } from "@/lib/app-context";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import * as Haptics from "expo-haptics";
 import { Platform } from "react-native";
 import Animated, { FadeIn, FadeInUp } from "react-native-reanimated";
+import { getParentColors } from "@/lib/theme-utils";
 
 export default function NameInputScreen() {
   const router = useRouter();
@@ -13,24 +14,8 @@ export default function NameInputScreen() {
   const t = useTranslation();
   const [name, setName] = useState("");
 
-  const getParentColors = () => {
-    if (parent === "papa") {
-      return {
-        bg: "#E3F2FD",
-        primary: "#90CAF9",
-        surface: "#BBDEFB",
-        border: "#64B5F6",
-      };
-    }
-    return {
-      bg: "#FCE4EC",
-      primary: "#F48FB1",
-      surface: "#F8BBD9",
-      border: "#F06292",
-    };
-  };
-
-  const colors = getParentColors();
+  // パフォーマンス最適化: useMemoでメモ化
+  const colors = useMemo(() => getParentColors(parent), [parent]);
 
   const handleContinue = async () => {
     if (Platform.OS !== "web") {

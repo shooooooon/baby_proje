@@ -3,11 +3,12 @@ import { useRouter } from "expo-router";
 import { ScreenContainer } from "@/components/screen-container";
 import { useApp, useTranslation, type Language, type Parent } from "@/lib/app-context";
 import { usePremium } from "@/lib/premium-context";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import * as Haptics from "expo-haptics";
 import { Platform } from "react-native";
 import Animated, { FadeIn, FadeInUp, SlideInDown } from "react-native-reanimated";
 import { trpc } from "@/lib/trpc";
+import { getParentColors } from "@/lib/theme-utils";
 
 interface Message {
   id: string;
@@ -38,24 +39,8 @@ export default function MainScreen() {
     { key: "hold", ...t.actions.hold },
   ];
 
-  const getParentColors = () => {
-    if (parent === "papa") {
-      return {
-        bg: "#E3F2FD",
-        primary: "#90CAF9",
-        surface: "#BBDEFB",
-        border: "#64B5F6",
-      };
-    }
-    return {
-      bg: "#FCE4EC",
-      primary: "#F48FB1",
-      surface: "#F8BBD9",
-      border: "#F06292",
-    };
-  };
-
-  const colors = getParentColors();
+  // パフォーマンス最適化: useMemoでメモ化
+  const colors = useMemo(() => getParentColors(parent), [parent]);
 
   const handleAction = async (action: typeof actions[0]) => {
     if (Platform.OS !== "web") {
@@ -73,12 +58,19 @@ export default function MainScreen() {
     setIsLoading(true);
 
     try {
+      // 型安全性チェック
+      if (!parent || !language) {
+        console.error("Parent or language is not set");
+        setIsLoading(false);
+        return;
+      }
+
       // AI応答を取得
       const response = await aiMutation.mutateAsync({
         messages: [
           {
             role: "user",
-            content: buildPrompt(action.action, parent as Parent, language as Language, babyName),
+            content: buildPrompt(action.action, parent, language, babyName),
           },
         ],
       });
@@ -154,9 +146,10 @@ export default function MainScreen() {
 
   useEffect(() => {
     // 新しいメッセージが追加されたらスクロール
-    setTimeout(() => {
+    const timer = setTimeout(() => {
       scrollViewRef.current?.scrollToEnd({ animated: true });
     }, 100);
+    return () => clearTimeout(timer);
   }, [messages]);
 
   // 初期挨拶メッセージ

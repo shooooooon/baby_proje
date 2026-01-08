@@ -52,6 +52,9 @@ export default function ParentSelectScreen() {
           {/* パパカード */}
           <Animated.View entering={FadeInLeft.delay(100).duration(400)}>
             <Pressable
+              accessibilityLabel={t.papa}
+              accessibilityHint={t.papaDesc}
+              accessibilityRole="button"
               onPress={() => handleParentSelect("papa")}
               style={({ pressed }) => [
                 styles.card,
@@ -70,6 +73,9 @@ export default function ParentSelectScreen() {
           {/* ママカード */}
           <Animated.View entering={FadeInRight.delay(200).duration(400)}>
             <Pressable
+              accessibilityLabel={t.mama}
+              accessibilityHint={t.mamaDesc}
+              accessibilityRole="button"
               onPress={() => handleParentSelect("mama")}
               style={({ pressed }) => [
                 styles.card,
