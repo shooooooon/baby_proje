@@ -89,6 +89,7 @@ export default function RootLayout() {
               <Stack screenOptions={{ headerShown: false }}>
                 <Stack.Screen name="index" />
                 <Stack.Screen name="parent-select" />
+                <Stack.Screen name="name-input" />
                 <Stack.Screen name="main" />
                 <Stack.Screen name="chat" />
                 <Stack.Screen name="upgrade" />

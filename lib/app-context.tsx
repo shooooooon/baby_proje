@@ -8,12 +8,14 @@ export type Parent = 'papa' | 'mama';
 interface AppState {
   language: Language | null;
   parent: Parent | null;
+  babyName: string | null;
   isLoading: boolean;
 }
 
 interface AppContextType extends AppState {
   setLanguage: (lang: Language) => Promise<void>;
   setParent: (parent: Parent) => Promise<void>;
+  setBabyName: (name: string) => Promise<void>;
   resetSettings: () => Promise<void>;
 }
 
@@ -22,12 +24,14 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 const STORAGE_KEYS = {
   LANGUAGE: 'app_language',
   PARENT: 'app_parent',
+  BABY_NAME: 'app_baby_name',
 };
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AppState>({
     language: null,
     parent: null,
+    babyName: null,
     isLoading: true,
   });
 
@@ -38,13 +42,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const loadSettings = async () => {
     try {
-      const [language, parent] = await Promise.all([
+      const [language, parent, babyName] = await Promise.all([
         AsyncStorage.getItem(STORAGE_KEYS.LANGUAGE),
         AsyncStorage.getItem(STORAGE_KEYS.PARENT),
+        AsyncStorage.getItem(STORAGE_KEYS.BABY_NAME),
       ]);
       setState({
         language: language as Language | null,
         parent: parent as Parent | null,
+        babyName: babyName,
         isLoading: false,
       });
     } catch (error) {
@@ -71,15 +77,26 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const setBabyName = async (name: string) => {
+    try {
+      await AsyncStorage.setItem(STORAGE_KEYS.BABY_NAME, name);
+      setState(prev => ({ ...prev, babyName: name }));
+    } catch (error) {
+      console.error('Failed to save baby name:', error);
+    }
+  };
+
   const resetSettings = async () => {
     try {
       await Promise.all([
         AsyncStorage.removeItem(STORAGE_KEYS.LANGUAGE),
         AsyncStorage.removeItem(STORAGE_KEYS.PARENT),
+        AsyncStorage.removeItem(STORAGE_KEYS.BABY_NAME),
       ]);
       setState({
         language: null,
         parent: null,
+        babyName: null,
         isLoading: false,
       });
     } catch (error) {
@@ -93,6 +110,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         ...state,
         setLanguage,
         setParent,
+        setBabyName,
         resetSettings,
       }}
     >
@@ -159,6 +177,14 @@ export const translations = {
     noMessagesLeft: 'No messages left today',
     upgradeForMore: 'Upgrade for unlimited messages',
     premiumUnlimited: 'Unlimited messages',
+    // Name settings
+    enterYourName: "What's your name?",
+    nameInputPlaceholder: 'Enter your name',
+    nameContinue: 'Continue',
+    nameSkip: 'Skip',
+    changeName: 'Change Name',
+    yourName: 'Your Name',
+    defaultBabyName: 'little one',
   },
   ja: {
     selectLanguage: '言語を選択',
@@ -208,6 +234,14 @@ export const translations = {
     noMessagesLeft: '今日のメッセージはありません',
     upgradeForMore: '無制限にするにはアップグレード',
     premiumUnlimited: '無制限',
+    // Name settings
+    enterYourName: 'あなたの名前は？',
+    nameInputPlaceholder: '名前を入力',
+    nameContinue: '続ける',
+    nameSkip: 'スキップ',
+    changeName: '名前を変更',
+    yourName: 'あなたの名前',
+    defaultBabyName: '赤ちゃん',
   },
 } as const;
 

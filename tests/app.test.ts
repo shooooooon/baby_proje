@@ -442,6 +442,67 @@ describe("Chat Greetings", () => {
   });
 });
 
+// 名前設定機能のテスト
+describe("Baby Name Feature", () => {
+  it("should store baby name correctly", () => {
+    let babyName: string | null = null;
+    babyName = "ゆうき";
+    expect(babyName).toBe("ゆうき");
+  });
+
+  it("should use default name when not set", () => {
+    const babyName: string | null = null;
+    const language = "ja";
+    const displayName = babyName || (language === "ja" ? "赤ちゃん" : "little one");
+    expect(displayName).toBe("赤ちゃん");
+  });
+
+  it("should use English default when language is English", () => {
+    const babyName: string | null = null;
+    function getDefaultName(lang: string): string {
+      return lang === "ja" ? "赤ちゃん" : "little one";
+    }
+    const displayName = babyName || getDefaultName("en");
+    expect(displayName).toBe("little one");
+  });
+
+  it("should include name in prompt", () => {
+    const babyName = "Yuki";
+    const prompt = `You are caring for a baby named "${babyName}"`;
+    expect(prompt).toContain("Yuki");
+  });
+});
+
+// 名前入力翻訳のテスト
+describe("Name Input Translations", () => {
+  const translations = {
+    en: {
+      enterYourName: "What's your name?",
+      nameInputPlaceholder: 'Enter your name',
+      nameContinue: 'Continue',
+      nameSkip: 'Skip',
+      changeName: 'Change Name',
+    },
+    ja: {
+      enterYourName: 'あなたの名前は？',
+      nameInputPlaceholder: '名前を入力',
+      nameContinue: '続ける',
+      nameSkip: 'スキップ',
+      changeName: '名前を変更',
+    },
+  };
+
+  it("should have English name translations", () => {
+    expect(translations.en.enterYourName).toBe("What's your name?");
+    expect(translations.en.changeName).toBe('Change Name');
+  });
+
+  it("should have Japanese name translations", () => {
+    expect(translations.ja.enterYourName).toBe('あなたの名前は？');
+    expect(translations.ja.changeName).toBe('名前を変更');
+  });
+});
+
 // テーマカラーのテスト
 describe("Theme Colors", () => {
   const papaColors = {

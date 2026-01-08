@@ -16,7 +16,7 @@ export default function ParentSelectScreen() {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }
     await setParent(parent);
-    router.push("/main" as never);
+    router.push("/name-input" as never);
   };
 
   const handleBack = () => {

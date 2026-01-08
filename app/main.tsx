@@ -18,7 +18,7 @@ interface Message {
 
 export default function MainScreen() {
   const router = useRouter();
-  const { parent, language, resetSettings } = useApp();
+  const { parent, language, babyName, resetSettings } = useApp();
   const t = useTranslation();
   const { isPremium } = usePremium();
   const [messages, setMessages] = useState<Message[]>([]);
@@ -78,7 +78,7 @@ export default function MainScreen() {
         messages: [
           {
             role: "user",
-            content: buildPrompt(action.action, parent as Parent, language as Language),
+            content: buildPrompt(action.action, parent as Parent, language as Language, babyName),
           },
         ],
       });
@@ -142,6 +142,14 @@ export default function MainScreen() {
     } else {
       router.push("/upgrade" as never);
     }
+  };
+
+  const handleChangeName = () => {
+    if (Platform.OS !== "web") {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    setShowSettings(false);
+    router.push("/name-input" as never);
   };
 
   useEffect(() => {
@@ -230,6 +238,21 @@ export default function MainScreen() {
               </View>
             </Pressable>
             <View style={styles.settingsDivider} />
+            <Pressable
+              onPress={handleChangeName}
+              style={({ pressed }) => [
+                styles.settingsItem,
+                pressed && styles.settingsItemPressed,
+              ]}
+            >
+              <Text style={styles.settingsItemEmoji}>👤</Text>
+              <View style={styles.settingsItemContent}>
+                <Text style={styles.settingsItemText}>{t.changeName}</Text>
+                {babyName && (
+                  <Text style={styles.currentNameText}>({babyName})</Text>
+                )}
+              </View>
+            </Pressable>
             <Pressable
               onPress={handleChangeParent}
               style={({ pressed }) => [
@@ -345,7 +368,7 @@ export default function MainScreen() {
 }
 
 // プロンプト生成
-function buildPrompt(action: string, parent: Parent, language: Language): string {
+function buildPrompt(action: string, parent: Parent, language: Language, babyName?: string | null): string {
   const parentName = parent === "papa" 
     ? (language === "ja" ? "パパ" : "Papa") 
     : (language === "ja" ? "ママ" : "Mama");
@@ -354,11 +377,16 @@ function buildPrompt(action: string, parent: Parent, language: Language): string
     ? (language === "ja" ? "優しく穏やかで、少し不器用だが一生懸命な父親" : "A gentle, playful, slightly clumsy but devoted father")
     : (language === "ja" ? "温かく包容力があり、直感的に赤ちゃんの気持ちを察する母親" : "A warm, intuitive, soothing mother");
 
-  return `You are ${parentName}, ${parentDesc}. You are caring for a baby (the user).
+  const babyNameStr = babyName 
+    ? babyName 
+    : (language === "ja" ? "赤ちゃん" : "little one");
+
+  return `You are ${parentName}, ${parentDesc}. You are caring for a baby named "${babyNameStr}" (the user).
 
 The baby is ${action}.
 
 Respond in ${language === "ja" ? "Japanese" : "English"} with 30-80 words.
+Address the baby by their name "${babyNameStr}" occasionally.
 Include actions in italics like *gently rocks you* or *優しく抱き上げて*.
 Use soft, affectionate baby-talk.
 Be repetitive and rhythmic (babies find this comforting).
@@ -538,6 +566,11 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: "600",
     color: "#ffffff",
+  },
+  currentNameText: {
+    fontSize: 14,
+    color: "#687076",
+    fontStyle: "italic",
   },
   settingsDivider: {
     height: 1,
