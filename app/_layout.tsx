@@ -9,6 +9,7 @@ import { Platform } from "react-native";
 import "@/lib/_core/nativewind-pressable";
 import { ThemeProvider } from "@/lib/theme-provider";
 import { AppProvider } from "@/lib/app-context";
+import { PremiumProvider } from "@/lib/premium-context";
 import {
   SafeAreaFrameContext,
   SafeAreaInsetsContext,
@@ -84,14 +85,18 @@ export default function RootLayout() {
       <trpc.Provider client={trpcClient} queryClient={queryClient}>
         <QueryClientProvider client={queryClient}>
           <AppProvider>
-            <Stack screenOptions={{ headerShown: false }}>
-              <Stack.Screen name="index" />
-              <Stack.Screen name="parent-select" />
-              <Stack.Screen name="main" />
-              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-              <Stack.Screen name="oauth/callback" />
-            </Stack>
-            <StatusBar style="auto" />
+            <PremiumProvider>
+              <Stack screenOptions={{ headerShown: false }}>
+                <Stack.Screen name="index" />
+                <Stack.Screen name="parent-select" />
+                <Stack.Screen name="main" />
+                <Stack.Screen name="chat" />
+                <Stack.Screen name="upgrade" />
+                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                <Stack.Screen name="oauth/callback" />
+              </Stack>
+              <StatusBar style="auto" />
+            </PremiumProvider>
           </AppProvider>
         </QueryClientProvider>
       </trpc.Provider>

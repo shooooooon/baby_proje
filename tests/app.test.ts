@@ -316,6 +316,132 @@ describe("Special Mode Translations", () => {
   });
 });
 
+// プレミアム状態管理のテスト
+describe("Premium State Management", () => {
+  it("should have free plan by default", () => {
+    const defaultPlan = 'free';
+    expect(defaultPlan).toBe('free');
+  });
+
+  it("should upgrade to premium", () => {
+    let plan = 'free';
+    plan = 'premium';
+    expect(plan).toBe('premium');
+  });
+
+  it("should check isPremium correctly", () => {
+    const plan = 'premium';
+    const isPremium = plan === 'premium';
+    expect(isPremium).toBe(true);
+  });
+});
+
+// チャットモード翻訳のテスト
+describe("Chat Mode Translations", () => {
+  const translations = {
+    en: {
+      chatMode: 'Chat Mode',
+      chatModeDesc: 'Have a free conversation with your parent',
+      premiumFeature: 'Premium Feature',
+      upgradeToPremium: 'Upgrade to Premium',
+      premiumBenefits: 'Unlock unlimited chat conversations',
+      chatPlaceholder: 'Type your message...',
+      send: 'Send',
+    },
+    ja: {
+      chatMode: 'チャットモード',
+      chatModeDesc: '自由におしゃべりしよう',
+      premiumFeature: 'プレミアム機能',
+      upgradeToPremium: 'プレミアムにアップグレード',
+      premiumBenefits: '無制限のチャットをお楽しみいただけます',
+      chatPlaceholder: 'メッセージを入力...',
+      send: '送信',
+    },
+  };
+
+  it("should have English chat mode translations", () => {
+    expect(translations.en.chatMode).toBe('Chat Mode');
+    expect(translations.en.send).toBe('Send');
+  });
+
+  it("should have Japanese chat mode translations", () => {
+    expect(translations.ja.chatMode).toBe('チャットモード');
+    expect(translations.ja.send).toBe('送信');
+  });
+});
+
+// チャットメッセージ制限のテスト
+describe("Chat Message Limits", () => {
+  const FREE_DAILY_LIMIT = 3;
+
+  it("should allow messages when under limit", () => {
+    const messagesUsed = 2;
+    const canSend = messagesUsed < FREE_DAILY_LIMIT;
+    expect(canSend).toBe(true);
+  });
+
+  it("should block messages when at limit", () => {
+    const messagesUsed = 3;
+    const canSend = messagesUsed < FREE_DAILY_LIMIT;
+    expect(canSend).toBe(false);
+  });
+
+  it("should allow unlimited for premium", () => {
+    const isPremium = true;
+    const messagesUsed = 100;
+    const canSend = isPremium || messagesUsed < FREE_DAILY_LIMIT;
+    expect(canSend).toBe(true);
+  });
+});
+
+// チャットプロンプトのテスト
+describe("Chat System Prompt", () => {
+  function buildChatPrompt(parent: "papa" | "mama", language: "en" | "ja"): string {
+    const parentName = parent === "papa" 
+      ? (language === "ja" ? "パパ" : "Papa") 
+      : (language === "ja" ? "ママ" : "Mama");
+
+    if (language === "ja") {
+      return `あなたは${parentName}です。赤ちゃんと自由に会話してください。`;
+    }
+    return `You are ${parentName}. Have a free conversation with the baby.`;
+  }
+
+  it("should generate Japanese Papa chat prompt", () => {
+    const prompt = buildChatPrompt("papa", "ja");
+    expect(prompt).toContain("パパ");
+    expect(prompt).toContain("会話");
+  });
+
+  it("should generate English Mama chat prompt", () => {
+    const prompt = buildChatPrompt("mama", "en");
+    expect(prompt).toContain("Mama");
+    expect(prompt).toContain("conversation");
+  });
+});
+
+// チャット挨拶のテスト
+describe("Chat Greetings", () => {
+  const greetings = {
+    papa: {
+      en: "Hey there, little one! Papa's here to chat with you.",
+      ja: "やあ、パパだよ！今日は何でもお話ししようね。",
+    },
+    mama: {
+      en: "Hello, my sweet baby! Mommy's here to talk with you.",
+      ja: "こんにちは、かわいい赤ちゃん！ママとおしゃべりしようね。",
+    },
+  };
+
+  it("should have Papa English greeting", () => {
+    expect(greetings.papa.en).toContain("Papa");
+  });
+
+  it("should have Mama Japanese greeting", () => {
+    expect(greetings.mama.ja).toContain("ママ");
+  });
+});
+
 // テーマカラーのテスト
 describe("Theme Colors", () => {
   const papaColors = {

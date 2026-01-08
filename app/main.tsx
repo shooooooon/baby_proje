@@ -2,6 +2,7 @@ import { Text, View, Pressable, StyleSheet, ScrollView, ActivityIndicator } from
 import { useRouter } from "expo-router";
 import { ScreenContainer } from "@/components/screen-container";
 import { useApp, useTranslation, type Language, type Parent } from "@/lib/app-context";
+import { usePremium } from "@/lib/premium-context";
 import { useState, useRef, useEffect } from "react";
 import * as Haptics from "expo-haptics";
 import { Platform } from "react-native";
@@ -19,6 +20,7 @@ export default function MainScreen() {
   const router = useRouter();
   const { parent, language, resetSettings } = useApp();
   const t = useTranslation();
+  const { isPremium } = usePremium();
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
@@ -129,6 +131,19 @@ export default function MainScreen() {
     router.push("/story" as never);
   };
 
+  const handleChat = () => {
+    if (Platform.OS !== "web") {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    setShowSettings(false);
+    // プレミアムでない場合はアップグレード画面へ、プレミアムの場合はチャット画面へ
+    if (isPremium) {
+      router.push("/chat" as never);
+    } else {
+      router.push("/upgrade" as never);
+    }
+  };
+
   useEffect(() => {
     // 新しいメッセージが追加されたらスクロール
     setTimeout(() => {
@@ -196,6 +211,23 @@ export default function MainScreen() {
             >
               <Text style={styles.settingsItemEmoji}>📚</Text>
               <Text style={styles.settingsItemText}>{t.storyTime}</Text>
+            </Pressable>
+            <Pressable
+              onPress={handleChat}
+              style={({ pressed }) => [
+                styles.settingsItem,
+                pressed && styles.settingsItemPressed,
+              ]}
+            >
+              <Text style={styles.settingsItemEmoji}>💬</Text>
+              <View style={styles.settingsItemContent}>
+                <Text style={styles.settingsItemText}>{t.chatMode}</Text>
+                {!isPremium && (
+                  <View style={[styles.premiumBadge, { backgroundColor: colors.primary }]}>
+                    <Text style={styles.premiumBadgeText}>Premium</Text>
+                  </View>
+                )}
+              </View>
             </Pressable>
             <View style={styles.settingsDivider} />
             <Pressable
@@ -269,6 +301,18 @@ export default function MainScreen() {
           >
             <Text style={styles.specialModeEmoji}>📚</Text>
             <Text style={styles.specialModeText}>{t.storyTime}</Text>
+          </Pressable>
+          <Pressable
+            onPress={handleChat}
+            style={({ pressed }) => [
+              styles.specialModeButton,
+              { backgroundColor: isPremium ? colors.primary : '#FFD700' },
+              pressed && styles.specialModeButtonPressed,
+            ]}
+          >
+            <Text style={styles.specialModeEmoji}>💬</Text>
+            <Text style={styles.specialModeText}>{t.chatMode}</Text>
+            {!isPremium && <Text style={styles.premiumStar}>⭐</Text>}
           </Pressable>
         </View>
 
@@ -480,6 +524,21 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#11181C",
   },
+  settingsItemContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  premiumBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 10,
+  },
+  premiumBadgeText: {
+    fontSize: 10,
+    fontWeight: "600",
+    color: "#ffffff",
+  },
   settingsDivider: {
     height: 1,
     backgroundColor: "rgba(0,0,0,0.1)",
@@ -549,6 +608,10 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "600",
     color: "#ffffff",
+  },
+  premiumStar: {
+    fontSize: 12,
+    marginLeft: 4,
   },
   actionsContainer: {
     padding: 16,
